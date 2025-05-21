@@ -1,14 +1,21 @@
-import processing.sound.*;
-SoundFile file;
+import processing.soun
 
 void setup() {
-  size(960,720);
+  size(800, 600);
   background(255);
-    
-  // Load a soundfile from the /data folder of the sketch and play it back
-  file = new SoundFile(this, "ost/test.wav");
-  file.play();
-}      
+  noStroke();
+  fill(255, 0, 0);
+  
+  // Draw the radish
+  ellipse(width/2, height/2, 100, 100); // Radish body
+  fill(0, 255, 0);
+  beginShape();
+  vertex(width/2 - 20, height/2 - 50);
+  vertex(width/2 + 20, height/2 - 50);
+  vertex(width/2 + 10, height/2 - 80);
+  vertex(width/2 - 10, height/2 - 80);
+  endShape(CLOSE); // Radish leaves
+}
 
 void draw() {
   
