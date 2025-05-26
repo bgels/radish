@@ -1,4 +1,4 @@
-import processing.sound.*;
+  import processing.sound.*;
 import nl.genart.bpm.*;
 import nl.genart.bpm.arduinocontrols.*;
 import nl.genart.bpm.frequencyanalyzer.*;
@@ -12,12 +12,12 @@ String              songName = "test";
 
 void setup() {
   fullScreen(P3D);
-  // 1) init BPM & audio
+  // 1 init BPM & audio
   bpm  = new BeatsPerMinute(this);
   song = new SoundFile(this, "ost/" + songName + ".wav");
   song.play();
 
-  // 2) hand off to our animator
+  // 2 hand off to our animator
   bgAnim = new BackgroundAnimator(bpm, songName);
 }
 
