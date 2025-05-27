@@ -1,22 +1,45 @@
-import processing.soun
-
-void setup() {
-  size(800, 600);
-  background(255);
-  noStroke();
-  fill(255, 0, 0);
+  import processing.sound.*;
   
-  // Draw the radish
-  ellipse(width/2, height/2, 100, 100); // Radish body
-  fill(0, 255, 0);
-  beginShape();
-  vertex(width/2 - 20, height/2 - 50);
-  vertex(width/2 + 20, height/2 - 50);
-  vertex(width/2 + 10, height/2 - 80);
-  vertex(width/2 - 10, height/2 - 80);
-  endShape(CLOSE); // Radish leaves
-}
-
-void draw() {
+  SoundFile           song;
+  MainMenu            mainMenu;
+  Play                play;
   
-}
+  enum gameState {
+    MENU,
+    PLAYING
+  }
+  
+  gameState currentState = gameState.MENU;
+  
+  void setup() {
+    fullScreen(P3D);
+    mainMenu = new MainMenu("ost");  
+  }
+    
+  void draw() {
+    switch (currentState) {
+      case MENU:
+        mainMenu.update();
+        break;
+  
+      case PLAYING:
+        if (play != null) {
+          pushMatrix();
+          play.update();
+          popMatrix();
+        }
+          break;
+    }
+  }
+
+  
+  void mousePressed(){          
+    if(currentState == gameState.MENU){
+      mainMenu.mousePressed();
+      if(mainMenu.isSongSelected()){
+        SongEntry entry = mainMenu.getSelectedEntry();
+        play = new Play(this, entry);
+        currentState = gameState.PLAYING;
+      }
+    }
+  }
