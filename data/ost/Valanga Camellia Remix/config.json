@@ -1,0 +1,14 @@
+{
+  "songName": "Valanga!!!!",
+  "bpm": 285,
+  "offset":    -0.013,
+  "background": {
+    "colors": [
+      [57, 54, 70],
+      [244, 238, 224]
+    ]
+  },
+  "shapes": {
+    "cubeColors": [ [79, 69, 87], [109, 93, 110] ]
+  }
+}
