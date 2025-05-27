@@ -1,26 +1,45 @@
   import processing.sound.*;
-import nl.genart.bpm.*;
-import nl.genart.bpm.arduinocontrols.*;
-import nl.genart.bpm.frequencyanalyzer.*;
-import nl.genart.bpm.beatsperminute.*;
+  
+  SoundFile           song;
+  MainMenu            mainMenu;
+  Play                play;
+  
+  enum gameState {
+    MENU,
+    PLAYING
+  }
+  
+  gameState currentState = gameState.MENU;
+  
+  void setup() {
+    fullScreen(P3D);
+    mainMenu = new MainMenu("ost");  
+  }
+    
+  void draw() {
+    switch (currentState) {
+      case MENU:
+        mainMenu.update();
+        break;
+  
+      case PLAYING:
+        if (play != null) {
+          pushMatrix();
+          play.update();
+          popMatrix();
+        }
+          break;
+    }
+  }
 
-
-BeatsPerMinute      bpm;
-SoundFile           song;
-BackgroundAnimator  bgAnim;
-String              songName = "test";
-
-void setup() {
-  fullScreen(P3D);
-  // 1 init BPM & audio
-  bpm  = new BeatsPerMinute(this);
-  song = new SoundFile(this, "ost/" + songName + ".wav");
-  song.play();
-
-  // 2 hand off to our animator
-  bgAnim = new BackgroundAnimator(bpm, songName);
-}
-
-void draw() {
-  bgAnim.update();
-}
+  
+  void mousePressed(){          
+    if(currentState == gameState.MENU){
+      mainMenu.mousePressed();
+      if(mainMenu.isSongSelected()){
+        SongEntry entry = mainMenu.getSelectedEntry();
+        play = new Play(this, entry);
+        currentState = gameState.PLAYING;
+      }
+    }
+  }
