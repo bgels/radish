@@ -3,6 +3,7 @@
   SoundFile           song;
   MainMenu            mainMenu;
   Play                play;
+  SoundFile MenuSong;
   
   enum gameState {
     MENU,
@@ -13,7 +14,9 @@
   
   void setup() {
     fullScreen(P3D);
-    mainMenu = new MainMenu("ost");  
+    mainMenu = new MainMenu("ost");
+    MenuSong = new SoundFile(this, "menu.wav");
+    MenuSong.play();
   }
     
   void draw() {
@@ -23,6 +26,7 @@
         break;
   
       case PLAYING:
+      MenuSong.stop();
         if (play != null) {
           pushMatrix();
           play.update();

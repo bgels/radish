@@ -1,32 +1,20 @@
 class BeatClock {
-  float    bpm;
-  float    beatLenSec;       // seconds per beat
-  SoundFile song;            // can be null
-  float    offsetSec;        // shift the timeline
+  float    bpm, beatLenSec;
+  SoundFile song;
   int      lastBeat = -1;
   boolean[] once     = new boolean[17];
 
-  //default offset 0
   BeatClock(float bpm, SoundFile song) {
-    this(bpm, song, 0);
-  }
-
-  //constructor with offset
-  BeatClock(float bpm, SoundFile song, float offsetSec) {
-    this.bpm        = bpm;
-    this.song       = song;
-    this.offsetSec  = offsetSec;
-    beatLenSec      = 60.0 / bpm;
+    this.bpm       = bpm;
+    this.song      = song;
+    this.beatLenSec = 60.0f / bpm;
   }
 
   void tick() {
-    // read song.position() in seconds, then apply offset
-    float s = (song != null) 
-            ? song.position() 
-            : millis() / 1000.0;
-    float t = s + offsetSec;    // shift time
-    int   beat = int(t / beatLenSec);
-
+    float s = (song != null)
+            ? song.position()         // in seconds already
+            : millis() / 1000.0f;
+    int beat = int(s / beatLenSec);
     if (beat != lastBeat) {
       lastBeat = beat;
       for (int i = 1; i < once.length; i++) {
@@ -40,7 +28,7 @@ class BeatClock {
   }
 
   boolean everyOnce(int n) {
-    return (n >= 1 && n < once.length) ? once[n] : false;
+    return n >= 1 && n < once.length && once[n];
   }
 
   float getBPM() {
