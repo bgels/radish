@@ -70,7 +70,7 @@ class Play {
     }
   
     bgAnim = new BackgroundAnimator(beat, entry.folderName);
-    pg     = parent.createGraphics(parent.width, parent.height, P3D); // Add this line
+    pg     = parent.createGraphics(parent.width, parent.height, P3D);
   
     if (config.hasKey("songName")) {
       bgAnim.setSongName(config.getString("songName"));

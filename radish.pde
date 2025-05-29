@@ -1,5 +1,6 @@
-    import processing.sound.*;
+  import processing.sound.*;
   
+  AudioIn             in;
   SoundFile           song;
   MainMenu            mainMenu;
   Play                play;
@@ -14,6 +15,8 @@
   
   void setup() {
     fullScreen(P3D);
+    in = new AudioIn(this, 0);
+    in.stop();
     mainMenu = new MainMenu("ost");
     MenuSong = new SoundFile(this, "menu.wav");
     MenuSong.play();
@@ -28,9 +31,7 @@
       case PLAYING:
       MenuSong.stop();
         if (play != null) {
-          pushMatrix();
           play.update();
-          popMatrix();
         }
           break;
     }

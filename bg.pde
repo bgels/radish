@@ -106,6 +106,14 @@ void update() {
     noStroke();
     box(200);
   popMatrix();
+  
+  pushMatrix();
+    translate(width/2 - 100, height/2, 0);
+    rotateX(angle * .5 + phase * 0.05);
+    fill(cubeColors.get(1));
+    noStroke();
+    square(0, 200, 200);
+  popMatrix();
 
   pushMatrix();
     translate(width/2, height/2, 0);
