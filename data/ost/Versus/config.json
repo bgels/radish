@@ -1,0 +1,13 @@
+{
+  "songName": "A Fool Moon Night",
+  "bpm": 120,
+  "offset":  0,
+  "background": {
+    "colors": [
+      [57, 54, 70]
+    ]
+  }
+  "shapes": {
+    "cubeColors": [ [79, 69, 87], [109, 93, 110] ]
+  }
+}

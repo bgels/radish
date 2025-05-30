@@ -38,17 +38,39 @@ class Play {
      
     // ---------- SONG
     try {
-      float bpmVal = config.hasKey("bpm") ? config.getFloat("bpm") : 120;
+      float bpmVal    = config.hasKey("bpm")    ? config.getFloat("bpm")    : 120;
+      float offsetSec = config.hasKey("offset") ? config.getFloat("offset") : 0;
+      
       song = new SoundFile(parent, entry.audioFile.getAbsolutePath());
-      song.play();
-      beat   = new BeatClock(bpmVal, song);
+      
+      // POSITIVE offset → visuals lead audio → jump into the track
+      if (offsetSec > 0) {
+        int cueSample = int(offsetSec * song.sampleRate());
+        song.cue(cueSample);
+        song.play();
+      
+      // NEGATIVE offset → audio leads visuals → delay the play()
+      } else if (offsetSec < 0) {
+        int delayMs = int(-offsetSec * 1000);
+        new java.util.Timer().schedule(
+          new java.util.TimerTask() {
+            public void run() { song.play(); }
+          }, delayMs
+        );
+      
+      // zero offset → play immediately
+      } else {
+        song.play();
+      }
+      
+      beat = new BeatClock(bpmVal, song);
     } catch (Exception e) {
       println("ERROR | can't load audio:", entry.audioFile, e);
       song = null;
     }
   
     bgAnim = new BackgroundAnimator(beat, entry.folderName);
-    pg     = parent.createGraphics(parent.width, parent.height, P3D); // Add this line
+    pg     = parent.createGraphics(parent.width, parent.height, P3D);
   
     if (config.hasKey("songName")) {
       bgAnim.setSongName(config.getString("songName"));

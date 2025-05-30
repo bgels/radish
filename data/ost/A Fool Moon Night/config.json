@@ -1,6 +1,7 @@
 {
   "songName": "A Fool Moon Night",
-  "bpm": 128,
+  "bpm": 138,
+  "offset":    -0.763,
   "background": {
     "colors": [
       [57, 54, 70],
