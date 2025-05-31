@@ -16,12 +16,23 @@ class Play {
   PGraphics pg;
   BackgroundAnimator  bgAnim;
 
+  // --- LANE UI elements
+  LaneUI[] laneUI = new LaneUI[LANES];
+  SpecialUI specialUI = new SpecialUI();
+
+  
+
   // --- Level config data (colors, shapes, etc.)
   JSONObject          config;
 
   // --- Note timing data (from .sm file)
   File                smFile;
   ArrayList<Float>    noteTimings = new ArrayList<Float>();
+
+  ArrayList<NoteEvent> chart;
+  ArrayList<Note>      live = new ArrayList<>();
+
+
 
   PApplet             parent;
 
@@ -75,15 +86,36 @@ class Play {
     if (config.hasKey("songName")) {
       bgAnim.setSongName(config.getString("songName"));
     }
-    bgAnim.applyConfig(config);
+
+    bgAnim.applyConfig(config); // apply background and shapes config
+    for(int i=0;i<LANES;i++) laneUI[i]=new LaneUI(i); // Initialize lane UI
+    chart = parseSM(smFile, beat.getBPM()); // Parse the .sm file
+
   
     smFile = entry.smFile;
   }
 
 
-  void update() {
+  void update(){
+    float songSec = song.position();
     beat.tick();
     bgAnim.update();
-    // TODO: render note objects based on noteTimings
+
+    // --- spawn
+    float beatLen = 60.0/beat.getBPM();
+    while(chart.size()>0 && songSec + LEAD_SEC >= chart.get(0).beat*beatLen){
+      live.add(new Note(chart.remove(0), beatLen));
+    }
+
+    // --- draw notes
+    for(int i=live.size()-1;i>=0;i--){
+      live.get(i).updateAndDraw(songSec);
+      if(live.get(i).missed||live.get(i).hit) live.remove(i);
+    }
+
+    // --- UI overlays
+    for(LaneUI ui : laneUI) ui.draw();
+    specialUI.draw();
   }
+
 }
