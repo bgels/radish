@@ -1,38 +1,54 @@
-// LaneUI.pde
+// ---------------------------------------------------------------
+// LaneUI – translucent 1/8-ring that flashes on hit / miss
+// ---------------------------------------------------------------
 class LaneUI {
   int lane;
-  color baseCol  = color(200,200,200,120);
-  color flashCol = color(0,255,120);
-  color missCol  = color(255,40,40);
-  float flashT   = 0;          // 0..1 fades
+  float alpha = 80;           // base alpha
+  float pulse = 0;            // 0→1 animates flash
+
   LaneUI(int lane){ this.lane=lane; }
+
   void pulse(boolean good){
-    flashT = 1;
-    baseCol = good ? flashCol : missCol;
+    // good = blue flash, bad = red flash
+    pulse = good ? 1.0 : -1.0;
   }
+
   void draw(){
-    float angle = laneAngle(lane);
+    if(abs(pulse) > 0.01){
+      pulse *= 0.90;          // decay
+    }
+
     pushMatrix();
+      float a = laneAngle(lane);
       translate(width/2, height/2);
-      rotate(angle);
+      rotate(a);
       noFill();
-      stroke(lerpColor(color(200,200,200,80), baseCol, flashT));
-      strokeWeight(6);
-      arc(0,0, JUDGE_RADIUS*2, JUDGE_RADIUS*2, -PI/8, PI/8);
+      stroke( pulse>0 ? color(0,200,255,200*pulse)
+                      : color(255,0,0,-200*pulse));
+      strokeWeight(10);
+      arc(0,0, JUDGE_RADIUS*2, JUDGE_RADIUS*2,
+          -PI/8, PI/8);
     popMatrix();
-    flashT = max(0, flashT - 0.2);
-    if(flashT==0) baseCol = color(200,200,200,120);
   }
 }
 
+// ---------------------------------------------------------------
+// SpecialUI – outer circular band for space-bar notes
+// ---------------------------------------------------------------
 class SpecialUI {
-  float flashT=0;
-  void pulse(boolean good){ flashT=1; }
+  float pulse = 0;
+
+  void pulse(boolean good){
+    pulse = good ? 1.0 : -1.0;
+  }
+
   void draw(){
+    if(abs(pulse) > 0.01) pulse *= 0.90;
+
     noFill();
-    stroke( lerpColor(color(200,200,200,80), color(0,255,120), flashT) );
-    strokeWeight(5);
+    stroke( pulse>0 ? color(255,200,0,200*pulse)
+                    : color(255,0,0,-200*pulse) );
+    strokeWeight(12);
     ellipse(width/2, height/2, SPECIAL_RADIUS*2, SPECIAL_RADIUS*2);
-    flashT = max(0, flashT-0.1);
   }
 }

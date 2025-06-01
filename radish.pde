@@ -1,10 +1,9 @@
   import processing.sound.*;
   
-  AudioIn             in;
-  SoundFile           song;
+  AudioIn             in; // Fix mic issue
   MainMenu            mainMenu;
   Play                play;
-  SoundFile MenuSong;
+  SoundFile           MenuSong;
   
   enum gameState {
     MENU,
@@ -50,30 +49,40 @@
   }
 
 
-  void keyPressed(){
-  if(currentState!=gameState.PLAYING) return;
-  int lane=-1;
-  switch(key){
-    case 'a': lane=0; break;
-    case 'x': lane=1; break;
-    case 'w': lane=2; break;
-    case 'd': lane=3; break;
-    case 'q': lane=4; break;
-    case 'z': lane=5; break;
-    case 'e': lane=6; break;
-    case 'c': lane=7; break;
-    case ' ': handleSpecial(); return;
+  void keyPressed() {
+    if (currentState != gameState.PLAYING) return;
+
+    int lane = -1;
+    switch (key){
+      case 'a': lane = 0; break;   // LEFT
+      case 'x': lane = 1; break;   // BOTTOM
+      case 'w': lane = 2; break;   // TOP
+      case 'd': lane = 3; break;   // RIGHT
+    
+      case 'q': lane = 4; break;   // TOP-LEFT
+      case 'z': lane = 5; break;   // BOTTOM-LEFT
+      case 'e': lane = 6; break;   // TOP-RIGHT
+      case 'c': lane = 7; break;   // BOTTOM-RIGHT
+    
+      case 's': handleSpecial(); return; 
+      case ' ': handleSpecial(); return;   // SPECIAL note
+    }
+
+
+    if (lane != -1) {
+      handleHit(lane);
+    }
   }
-  if(lane!=-1) handleHit(lane);
-}
+
 
 void handleHit(int lane){
   float songSec=play.song.position();
   float window=HIT_WINDOW;
   for(Note n : play.live){
     if(n.evt.lane==lane && !n.evt.special && abs(songSec-n.hitSec)<window){
+      // If the note is in the correct lane and within the hit window, and not a special note
       n.hit=true;
-      play.laneUI[lane].pulse(true);
+      play.laneUI[lane].pulse(true); // flash the lane UI
       return;
     }
   }
@@ -84,12 +93,10 @@ void handleSpecial(){
   float songSec=play.song.position();
   float window=HIT_WINDOW;
   for(Note n : play.live){
-    if(n.evt.special && abs(songSec-n.hitSec)<window){
+    if(n.evt.special && abs(songSec-n.hitSec)<window){ 
+      // If the note is a special note and within the hit window
       n.hit=true;
-      play.specialUI.pulse(true);
       return;
     }
   }
-  play.specialUI.pulse(false);
 }
-

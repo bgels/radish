@@ -1,141 +1,151 @@
-// BackgroundAnimator.pde
-import processing.data.JSONObject;
-import processing.data.JSONArray;
-import java.util.ArrayList;
-import processing.core.PApplet;
+// BackgroundAnimator.pde ----------------------------------------
+import processing.data.*;
 
-class BackgroundAnimator{
-      
-// --- Fields to hold BPM tracker and song title
-BeatClock     beat;
-String         songName;
+// ----------------------------------------------------------------
+// Renders the heavy rotating 3-D scene once per beat into a
+// PGraphics (bgPG) to lighten the main draw() load.
+// Only lightweight beat-synced overlays are done live.
+// ----------------------------------------------------------------
+class BackgroundAnimator {
 
-// --- Simple background colors list
-ArrayList<Integer> bgColors   = new ArrayList<Integer>();
-color              currentBgColor;
+  BeatClock beat;
+  String    songName;
 
-// --- Simple cube colors list
-ArrayList<Integer> cubeColors = new ArrayList<Integer>();
+  // colour lists -------------------------------------------------
+  ArrayList<Integer> bgColors   = new ArrayList<Integer>();
+  color              currentBgColor;
+  ArrayList<Integer> cubeColors = new ArrayList<Integer>();
 
-// --- Constructor
-BackgroundAnimator(BeatClock beat, String songName) {
-  this.beat     = beat;
-  this.songName = songName;
+  // cached graphics ---------------------------------------------
+  PGraphics bgPG;            // holds 3-D background
+  boolean   pgDirty = true;  // force redraw when colours change
 
-  // Add cube colors manually
-  addCubeColor(color(79, 69, 87));    // 1st cube color
-  addCubeColor(color(109, 93, 110));  // 2nd cube color
-  // Add background colors manually
-  addBgColor(color(57, 54, 70));      // background color 1
-  addBgColor(color(244, 238, 224));   // background color 2
+  BackgroundAnimator(BeatClock beat, String songName) {
+    this.beat     = beat;
+    this.songName = songName;
 
-  if (!bgColors.isEmpty()) {
+    // default colours (will be overwritten by JSON if provided)
+    addCubeColor(color(79,  69,  87));
+    addCubeColor(color(109, 93, 110));
+    addBgColor  (color(57,  54,  70));
+    addBgColor  (color(244, 238, 224));
     currentBgColor = bgColors.get(0);
+
+    bgPG = createGraphics(width, height, P3D);
+    redrawPG();             // draw first frame immediately
   }
-}
 
-void setSongName(String name) {
-  songName = name;
-}
+  // config -------------------------------------------------------
+  void setSongName(String s) {
+    songName = s;
+  }
 
-void applyConfig(JSONObject config) {
-  if (config.hasKey("background")) {
-    JSONObject bg = config.getJSONObject("background");
-    if (bg.hasKey("colors")) {
-      bgColors.clear();
-      JSONArray arr = bg.getJSONArray("colors");
-      for (int i = 0; i < arr.size(); i++) {
-        JSONArray c = arr.getJSONArray(i);
-        addBgColor(color(c.getInt(0), c.getInt(1), c.getInt(2)));
+  void applyConfig(JSONObject cfg) {
+    // -- parse "background" → "colors" array of [r,g,b]
+    if (cfg.hasKey("background")) {
+      JSONObject bg = cfg.getJSONObject("background");
+      if (bg.hasKey("colors")) {
+        bgColors.clear();
+        JSONArray arr = bg.getJSONArray("colors");
+        for (int i = 0; i < arr.size(); i++) {
+          JSONArray c = arr.getJSONArray(i);
+          int r = c.getInt(0);
+          int g = c.getInt(1);
+          int b = c.getInt(2);
+          addBgColor(color(r, g, b));
+        }
       }
     }
-  }
-  if (config.hasKey("shapes")) {
-    JSONObject sh = config.getJSONObject("shapes");
-    if (sh.hasKey("cubeColors")) {
-      cubeColors.clear();
-      JSONArray arr = sh.getJSONArray("cubeColors");
-      for (int i = 0; i < arr.size(); i++) {
-        JSONArray c = arr.getJSONArray(i);
-        addCubeColor(color(c.getInt(0), c.getInt(1), c.getInt(2)));
+
+    // -- parse "shapes" → "cubeColors" array of [r,g,b]
+    if (cfg.hasKey("shapes")) {
+      JSONObject sh = cfg.getJSONObject("shapes");
+      if (sh.hasKey("cubeColors")) {
+        cubeColors.clear();
+        JSONArray arr = sh.getJSONArray("cubeColors");
+        for (int i = 0; i < arr.size(); i++) {
+          JSONArray c = arr.getJSONArray(i);
+          int r = c.getInt(0);
+          int g = c.getInt(1);
+          int b = c.getInt(2);
+          addCubeColor(color(r, g, b));
+        }
       }
     }
+
+    // set initial background colour to the first entry, if any
+    if (!bgColors.isEmpty()) {
+      currentBgColor = bgColors.get(0);
+    }
+
+    // mark cached PGraphics as dirty so it will be redrawn next frame
+    pgDirty = true;
   }
-  if (!bgColors.isEmpty()) {
-    currentBgColor = bgColors.get(0);
+
+  void addBgColor(int c) {
+    bgColors.add(c);
   }
-}
 
-// Add a single color to the background list
-void addBgColor(int c) {
-  bgColors.add(c);
-  if (bgColors.size() == 1) {
-    currentBgColor = c;
+  void addCubeColor(int c) {
+    cubeColors.add(c);
   }
-}
 
-// Change to a specific background color by index
-void setBgColor(int idx) {
-  int i = constrain(idx, 0, bgColors.size()-1);
-  currentBgColor = bgColors.get(i);
-}
+  // --------------------------------------------------------------
+  void update() {
+    // 1) change background colour once per whole beat
+    if (beat.everyOnce(1)) {
+      int idx = int(random(bgColors.size()));
+      currentBgColor = bgColors.get(idx);
+      pgDirty = true;
+    }
 
-// Add a single color for a cube layer (manual mapping by index)
-void addCubeColor(int c) {
-  cubeColors.add(c);
-}
+    // 2) redraw cached PGraphics if colours have changed
+    if (pgDirty) {
+      redrawPG();
+    }
 
-/**
- * Main drawing update; call each frame from draw().
- */
-void update() {
-  if (beat.everyOnce(1)) {
-    int idx = int(random(bgColors.size()));
-    currentBgColor = bgColors.get(idx);
-  }
-  background(currentBgColor);
+    // 3) blit the cached 3-D scene
+    image(bgPG, 0, 0);
 
-  float phase = beat.getBPM() * TWO_PI;
-  float angle = (frameCount * 0.01) % TWO_PI;
-
-  pushMatrix();
-    translate(width/2, height/2, 0);
-    rotateX(angle + phase * 0.1);
-    rotateY(angle * .5 + phase * 0.05);
-    fill(cubeColors.get(0));
-    noStroke();
-    box(200);
-  popMatrix();
-  
-  pushMatrix();
-    translate(width/2 - 100, height/2, 0);
-    rotateX(angle * .5 + phase * 0.05);
-    fill(cubeColors.get(1));
-    noStroke();
-    square(0, 200, 200);
-  popMatrix();
-
-  pushMatrix();
-    translate(width/2, height/2, 0);
-    rotateY(angle * 2 + phase * 0.1);
+    // 4) lightweight overlays (song title)
     hint(DISABLE_DEPTH_TEST);
-    blendMode(INVERT);
-    stroke(cubeColors.get(1));
-    noFill();
-    box(500);
-    blendMode(BLEND);
-    hint(ENABLE_DEPTH_TEST);
-  popMatrix();
-
-  hint(DISABLE_DEPTH_TEST);
-  pushMatrix();
-    camera();
-    textAlign(LEFT, TOP);
-    textSize(48);
     fill(255);
+    textSize(48);
+    textAlign(LEFT, TOP);
     text(songName, 20, 20);
-  popMatrix();
-  hint(ENABLE_DEPTH_TEST);
-}
+    hint(ENABLE_DEPTH_TEST);
+  }
 
+  // --------------------------------------------------------------
+  void redrawPG() {
+    pgDirty = false;
+    bgPG.beginDraw();
+      bgPG.background(currentBgColor);
+
+      // compute “phase” inside current beat (0…1)
+      float ph  = beat.phase();
+      float ang = TWO_PI * ph;
+
+      // first rotating cube -------------------------------------
+      bgPG.pushMatrix();
+        bgPG.translate(width/2, height/2, 0);
+        bgPG.rotateX(ang + 0.1);
+        bgPG.rotateY(ang * 0.5 + 0.05);
+        bgPG.fill(cubeColors.get(0));
+        bgPG.noStroke();
+        bgPG.box(200);
+      bgPG.popMatrix();
+
+      // wireframe cube ------------------------------------------
+      bgPG.pushMatrix();
+        bgPG.translate(width/2, height/2, 0);
+        bgPG.rotateY(ang * 2 + 0.1);
+        bgPG.noFill();
+        bgPG.stroke(cubeColors.get(1));
+        bgPG.strokeWeight(3);
+        bgPG.box(300);
+      bgPG.popMatrix();
+
+    bgPG.endDraw();
+  }
 }

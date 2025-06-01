@@ -10,54 +10,61 @@ class NoteEvent{
 }
 
 
-// Note.pde  ── fixed
+/* Note.pde  ----------------------------------------------------------------
+ * A single in-game note (1/8 slice or special circle).
+ *   · does its own timing / drawing
+ *   · exposes hit / missed but NEVER talks to UI
+ * ------------------------------------------------------------------------*/
 class Note {
-  NoteEvent evt;
-  float  hitSec, spawnSec;
-  boolean hit = false, missed = false;
 
-  // beatLen  = 60 / BPM   (passed in by Play when it creates the Note)
-  Note(NoteEvent evt, float beatLen) {
-    this.evt = evt;
-    hitSec   = evt.beat * beatLen;     // exact hit time in seconds
-    spawnSec = hitSec - LEAD_SEC;      // LEAD_SEC comes from Constants.pde
-  }
+  // --- immutable data from SM file
+  final NoteEvent evt;     // lane · beat · special?
+  final float     hitSec;  // exact hit time  (s)
+  final float     spawnSec;// first visible   (s)
 
+  // --- runtime state
+  boolean hit     = false;
+  boolean missed  = false;
+
+  // --------------------------------------------------------------------
+    Note(NoteEvent evt, float beatLen) {
+      this.evt      = evt;
+      this.hitSec   = evt.beat * beatLen;
+      this.spawnSec = hitSec - LEAD_SEC;
+    }
+  
+    // --------------------------------------------------------------------
   void updateAndDraw(float songSec) {
+  
     if (hit || missed) return;
-    if (songSec < spawnSec) return;              // not on screen yet
-
-    float t = 1 - (songSec - spawnSec) / LEAD_SEC;   // 1 → 0 shrink factor
-    if (t < 0) {                                   // flew past centre
-      missed = true;
-      laneUI[evt.lane].pulse(false);               // flash red on miss
+    if (songSec < spawnSec) return;          // not visible yet
+  
+    float prog = constrain((songSec - spawnSec) / LEAD_SEC, 0, 1);  // 0 → 1
+    if (prog > 1) { missed = true; return; }        // flew past
+  
+    if (evt.special) {         // ----------- SPECIAL WAVE -----------
+      pushMatrix();
+        translate(width/2, height/2, 0);
+        noFill();
+        stroke(WAVE_STROKE);
+        strokeWeight(2);
+        float rNow = lerp(WAVE_START_RADIUS, SPECIAL_RADIUS, prog);
+        ellipse(0, 0, rNow*2, rNow*2);
+      popMatrix();
       return;
     }
-
+  
+    // ----------------------- REGULAR SLICE -------------------------
+    float a = laneAngle(evt.lane);
+    float r = lerp(width*0.55, JUDGE_RADIUS, prog);
+  
     pushMatrix();
-      float angle = laneAngle(evt.lane);
-      float r = lerp(width*0.55,
-                     evt.special ? SPECIAL_RADIUS : JUDGE_RADIUS,
-                     1 - t);
-      translate(width/2 + cos(angle)*r,
-                height/2 + sin(angle)*r);
-      rotate(angle + HALF_PI);
+      translate(width/2 + cos(a)*r, height/2 + sin(a)*r);
+      rotate(a + HALF_PI);
       noStroke();
-      if (evt.special) {
-        fill(255, 200, 0, 200);
-        ellipse(0, 0, r*2*t, r*2*t);               // shrinking circle
-      } else {
-        fill(0, 200, 255, 200);
-        arc(0, 0, r*2*t, r*2*t, -PI/8, PI/8);      // 1/8-slice
-      }
+      fill(0, 200, 255, 220);
+      arc(0, 0, NOTE_DIAMETER, NOTE_DIAMETER, -PI/8, PI/8);
     popMatrix();
   }
-}
 
-// unchanged helper
-float laneAngle(int lane) {
-  return new float[]{
-    PI, HALF_PI, -HALF_PI, 0,
-    3*PI/4, -3*PI/4, PI/4, -PI/4
-  }[lane];
 }

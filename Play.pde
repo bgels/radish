@@ -13,7 +13,6 @@ class Play {
   
 
   // --- Background
-  PGraphics pg;
   BackgroundAnimator  bgAnim;
 
   // --- LANE UI elements
@@ -27,72 +26,70 @@ class Play {
 
   // --- Note timing data (from .sm file)
   File                smFile;
-  ArrayList<Float>    noteTimings = new ArrayList<Float>();
 
   ArrayList<NoteEvent> chart;
   ArrayList<Note>      live = new ArrayList<>();
-
-
 
   PApplet             parent;
 
   Play(PApplet parent, SongEntry entry) {
     this.parent = parent;
     this.entry  = entry;
-  
+
     // ---------- JSON
     config = parent.loadJSONObject(entry.jsonFile.getAbsolutePath());
     if (config == null) {
       println("ERROR | bad JSON:", entry.jsonFile);
       config = new JSONObject();
     }
-     
-    // ---------- SONG
+
+    // ---------- SONG + SM parsing
     try {
-      float bpmVal    = config.hasKey("bpm")    ? config.getFloat("bpm")    : 120;
-      float offsetSec = config.hasKey("offset") ? config.getFloat("offset") : 0;
-      
+      SMChart chartData = readSM(entry.smFile);
+      float   bpmVal    = chartData.bpm;
+      float   offsetSec = chartData.offsetSec;
+
       song = new SoundFile(parent, entry.audioFile.getAbsolutePath());
-      
-      // POSITIVE offset → visuals lead audio → jump into the track
       if (offsetSec > 0) {
         int cueSample = int(offsetSec * song.sampleRate());
         song.cue(cueSample);
         song.play();
-      
-      // NEGATIVE offset → audio leads visuals → delay the play()
-      } else if (offsetSec < 0) {
+      } 
+      else if (offsetSec < 0) {
         int delayMs = int(-offsetSec * 1000);
         new java.util.Timer().schedule(
           new java.util.TimerTask() {
             public void run() { song.play(); }
           }, delayMs
         );
-      
-      // zero offset → play immediately
-      } else {
+      } 
+      else {
         song.play();
       }
-      
-      beat = new BeatClock(bpmVal, song);
-    } catch (Exception e) {
+
+      beat  = new BeatClock(bpmVal, offsetSec, song);
+      chart = chartData.events;
+    } 
+    catch (Exception e) {
       println("ERROR | can't load audio:", entry.audioFile, e);
-      song = null;
+      song  = null;
+      chart = new ArrayList<>();
     }
-  
+
+
+    // ---------- BACKGROUND + UI setup
     bgAnim = new BackgroundAnimator(beat, entry.folderName);
-    pg     = parent.createGraphics(parent.width, parent.height, P3D);
-  
+
     if (config.hasKey("songName")) {
       bgAnim.setSongName(config.getString("songName"));
     }
 
-    bgAnim.applyConfig(config); // apply background and shapes config
-    for(int i=0;i<LANES;i++) laneUI[i]=new LaneUI(i); // Initialize lane UI
-    chart = parseSM(smFile, beat.getBPM()); // Parse the .sm file
-
-  
     smFile = entry.smFile;
+
+    bgAnim.applyConfig(config);
+    for (int i = 0; i < LANES; i++) {
+      laneUI[i] = new LaneUI(i);
+    }
   }
 
 
@@ -103,19 +100,37 @@ class Play {
 
     // --- spawn
     float beatLen = 60.0/beat.getBPM();
-    while(chart.size()>0 && songSec + LEAD_SEC >= chart.get(0).beat*beatLen){
+    float musicBeat = (songSec - beat.songOffsetSec) / beatLen;   // <—
+    while (chart.size() > 0 &&
+           chart.get(0).beat - musicBeat <= LEAD_SEC / beatLen) {
       live.add(new Note(chart.remove(0), beatLen));
     }
 
-    // --- draw notes
-    for(int i=live.size()-1;i>=0;i--){
-      live.get(i).updateAndDraw(songSec);
-      if(live.get(i).missed||live.get(i).hit) live.remove(i);
+
+    // --- draw / resolve live notes ------------------------------
+    for (int i = live.size () - 1; i >= 0; i--) {
+      Note n = live.get(i);
+      n.updateAndDraw(songSec);
+    
+      // ordinary 1/8-slice notes only → lanes 0-7
+      if (!n.evt.special && n.evt.lane >= 0) {      //   ← guard!
+        if (n.missed)  laneUI[n.evt.lane].pulse(false);
+        else if (n.hit) laneUI[n.evt.lane].pulse(true);
+      }
+    
+      if (n.missed || n.hit) live.remove(i);
     }
+
+
 
     // --- UI overlays
     for(LaneUI ui : laneUI) ui.draw();
     specialUI.draw();
   }
+
+  void stopSong(){
+    if(song != null && song.isPlaying()) song.stop();
+  }
+
 
 }

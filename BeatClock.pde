@@ -1,37 +1,58 @@
 class BeatClock {
+// ------------------------------------------------------------
+// Simple beat-tracker that works with a fixed BPM.
+//
+//  • tick()     – call every frame to update internal state
+//  • everyOnce(n)  – true once on the first frame of each n-beat bar
+//  • phase()    – 0-1 progress inside the current beat
+// ------------------------------------------------------------
   float    bpm, beatLenSec;
+  float    songOffsetSec;          // SM #OFFSET support  (can be ±)
   SoundFile song;
-  int      lastBeat = -1;
-  boolean[] once     = new boolean[17];
 
-  BeatClock(float bpm, SoundFile song) {
-    this.bpm       = bpm;
-    this.song      = song;
-    this.beatLenSec = 60.0f / bpm;
+  int      lastWholeBeat = -1;
+  boolean[] once         = new boolean[17];   // 1..16
+
+  BeatClock(float bpm, float songOffsetSec, SoundFile song) {
+    this.bpm          = bpm;
+    this.songOffsetSec = songOffsetSec;
+    this.song         = song;
+    this.beatLenSec   = 60.0f / bpm;
   }
 
+  // ----------------------------------------------------------
   void tick() {
-    float s = (song != null)
-            ? song.position()         // in seconds already
-            : millis() / 1000.0f;
-    int beat = int(s / beatLenSec);
-    if (beat != lastBeat) {
-      lastBeat = beat;
+    float songSec = (song != null)
+                  ? song.position()
+                  : millis() / 1000.0f;
+
+    // compensate SM offset
+    float t = songSec - songOffsetSec;
+
+    int wholeBeat = int(t / beatLenSec);
+
+    if (wholeBeat != lastWholeBeat) {       // new beat crossed
+      lastWholeBeat = wholeBeat;
       for (int i = 1; i < once.length; i++) {
-        once[i] = (beat % i == 0);
+        once[i] = (wholeBeat % i == 0);
       }
     } else {
-      for (int i = 1; i < once.length; i++) {
-        once[i] = false;
-      }
+      for (int i = 1; i < once.length; i++) once[i] = false;
     }
   }
 
-  boolean everyOnce(int n) {
+  boolean everyOnce(int n) {                // same signature as before
     return n >= 1 && n < once.length && once[n];
   }
 
-  float getBPM() {
-    return bpm;
+  float getBPM() { return bpm; }
+
+  // ----------------------------------------------------------
+  float phase() {                           // 0 … 1 progress inside beat
+    float songSec = (song != null)
+                  ? song.position()
+                  : millis() / 1000.0f;
+    float t = (songSec - songOffsetSec) / beatLenSec;
+    return (t - floor(t));                  // fractional part
   }
 }
