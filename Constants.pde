@@ -3,7 +3,7 @@ final float INNER_DIAMETER    = 140;
 final float ARC_SPAN_DEG      =  40;
 
 final float LEAD_SEC         =   3;   // how early notes spawn
-final float HIT_WINDOW       = 0.12;  // ± seconds for OK hit
+final float HIT_WINDOW       = .3;  // ± seconds for OK hit
 final float HIT_WINDOW_PERF = .08f;
 final float HIT_WINDOW_GOOD = .14f;
 final int   LANES            =   8;
