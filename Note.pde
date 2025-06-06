@@ -60,7 +60,7 @@ class Note {
   
     pushMatrix();
       translate(width/2 + cos(a)*r, height/2 + sin(a)*r);
-      rotate(a + HALF_PI);
+      rotate(a);
       noStroke();
       fill(0, 200, 255, 220);
       arc(0, 0, NOTE_DIAMETER, NOTE_DIAMETER, -PI/8, PI/8);
