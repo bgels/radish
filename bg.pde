@@ -18,7 +18,6 @@ class BackgroundAnimator {
 
   // cached graphics ---------------------------------------------
   PGraphics bgPG;            // holds 3-D background
-  boolean   pgDirty = true;  // force redraw when colours change
 
   BackgroundAnimator(BeatClock beat, String songName) {
     this.beat     = beat;
@@ -78,8 +77,6 @@ class BackgroundAnimator {
       currentBgColor = bgColors.get(0);
     }
 
-    // mark cached PGraphics as dirty so it will be redrawn next frame
-    pgDirty = true;
   }
 
   void addBgColor(int c) {
@@ -96,14 +93,9 @@ class BackgroundAnimator {
     if (beat.everyOnce(1)) {
       int idx = int(random(bgColors.size()));
       currentBgColor = bgColors.get(idx);
-      pgDirty = true;
     }
 
-    // 2) redraw cached PGraphics if colours have changed
-    if (pgDirty) {
-      redrawPG();
-    }
-
+    redrawPG();
     // 3) blit the cached 3-D scene
     image(bgPG, 0, 0);
 
@@ -118,7 +110,6 @@ class BackgroundAnimator {
 
   // --------------------------------------------------------------
   void redrawPG() {
-    pgDirty = false;
     bgPG.beginDraw();
       bgPG.background(currentBgColor);
 

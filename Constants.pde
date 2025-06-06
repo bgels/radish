@@ -13,8 +13,8 @@ final float NOTE_DIAMETER   = 100;   // Ø of every regular slice (pixels)
 final float WAVE_START_RADIUS = max(width, height) * .9; // off-screen
 final int   WAVE_STROKE       = 0xFF0096FF;              // blue #0096FF
 
-final float JUDGE_RADIUS     =  60;   // main judgement ring
-final float SPECIAL_RADIUS   = 110;   // where special notes land
+final float JUDGE_RADIUS     =  100;   // main judgement ring
+final float SPECIAL_RADIUS   = 300;   // where special notes land
 
 //  index : 0      1         2         3        4          5          6          7
 //  lane  : LEFT , BOTTOM ,  TOP ,   RIGHT ,  TOP-LEFT , BOTTOM-LEFT , TOP-RIGHT , BOTTOM-RIGHT
