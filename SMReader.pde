@@ -17,13 +17,15 @@ SMChart readSM(File sm) {
     String s = trim(raw);
 
     if (s.startsWith("#OFFSET:")) {
-      try { chart.offsetSec = float(s.substring(8, s.length()-1)); }
-      catch(Exception ignore) {}
+      try { chart.offsetSec = float(s.substring(8, s.length()-1)); 
+      println("SMReader | offset:", chart.offsetSec, "s");
+      } catch(Exception ignore) {}
     }
     else if (s.startsWith("#BPMS:")) {
       // take first “=<value>” only
       try {
         String val = s.substring(s.indexOf('=')+1, s.length()-1);
+        println("SMReader | bpm:", val);
         chart.bpm  = float(val);
       } catch(Exception ignore) {}
     }

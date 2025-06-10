@@ -100,7 +100,7 @@ class Play {
 
     // --- spawn
     float beatLen = 60.0/beat.getBPM();
-    float musicBeat = (songSec - beat.songOffsetSec) / beatLen;   // <—
+    float musicBeat = (songSec - beat.songOffsetSec) / beatLen;
     while (chart.size() > 0 &&
            chart.get(0).beat - musicBeat <= LEAD_SEC / beatLen) {
       live.add(new Note(chart.remove(0), beatLen));
