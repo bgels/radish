@@ -75,28 +75,45 @@
   }
 
 
-void handleHit(int lane){
-  float songSec=play.song.position();
-  float window=HIT_WINDOW;
-  for(Note n : play.live){
-    if(n.evt.lane==lane && !n.evt.special && abs(songSec-n.hitSec)<window){
-      // If the note is in the correct lane and within the hit window, and not a special note
-      n.hit=true;
-      play.laneUI[lane].pulse(true); // flash the lane UI
-      return;
+void handleHit(int lane) {
+  float songSec = play.song.position() / 1000.0; // Assuming song.position() returns milliseconds
+  for (Note n : play.live) {
+    if (n.evt.lane == lane && !n.evt.special && !n.hit && !n.missed) {
+      float timingError = abs(songSec - n.hitSec);
+      if (timingError <= HIT_WINDOW_LATE) {
+        n.hit = true;
+        play.laneUI[lane].pulse(true); // Visual feedback for hit
+        if (timingError <= HIT_WINDOW_PERF) {
+          println("Perfect Hit!"); // Replace with scoring logic
+        } else if (timingError <= HIT_WINDOW_GOOD) {
+          println("Good Hit!");
+        } else {
+          println("Late Hit!");
+        }
+      }
+      return; // Hit the first eligible note only
     }
   }
-  play.laneUI[lane].pulse(false);  // miss flash
+  play.laneUI[lane].pulse(false); // Visual feedback for miss
 }
 
-void handleSpecial(){
-  float songSec=play.song.position();
-  float window=HIT_WINDOW;
-  for(Note n : play.live){
-    if(n.evt.special && abs(songSec-n.hitSec)<window){ 
-      // If the note is a special note and within the hit window
-      n.hit=true;
-      return;
+
+void handleSpecial() {
+  float songSec = play.song.position() / 1000.0; // Assuming song.position() returns milliseconds
+  for (Note n : play.live) {
+    if (n.evt.special && n.evt.special && !n.hit && !n.missed) {
+      float timingError = abs(songSec - n.hitSec);
+      if (timingError <= HIT_WINDOW_LATE) {
+        n.hit = true;
+        if (timingError <= HIT_WINDOW_PERF) {
+          println("Perfect Hit!"); // Replace with scoring logic
+        } else if (timingError <= HIT_WINDOW_GOOD) {
+          println("Good Hit!");
+        } else {
+          println("Late Hit!");
+        }
+      }
+      return; // Hit the first eligible note only
     }
   }
 }

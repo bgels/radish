@@ -3,11 +3,11 @@ final float INNER_DIAMETER    = 140;
 final float ARC_SPAN_DEG      =  40;
 
 final float LEAD_SEC         =   3;   // how early notes spawn
-final float HIT_WINDOW       = .3;  // ± seconds for OK hit
-final float HIT_WINDOW_PERF = .08f;
-final float HIT_WINDOW_GOOD = .14f;
-final int   LANES            =   8;
+final float HIT_WINDOW_PERF = 0.3f;  // Perfect hit window (±80ms)
+final float HIT_WINDOW_GOOD = 0.5f;  // Good hit window (±140ms)
+final float HIT_WINDOW_LATE = .8f;  // Late hit window (±220ms)
 
+final int   LANES            =   8;
 final float NOTE_DIAMETER   = 100;   // Ø of every regular slice (pixels)
 
 final float WAVE_START_RADIUS = max(width, height) * .9; // off-screen
@@ -19,6 +19,8 @@ final float SPECIAL_RADIUS   = 300;   // where special notes land
 
 // ───────── UI theming ─────────
 float uiScale = 1.0;                          // change at run-time to resize everything
+final float missFadeSecs = 0.5f;          // how long it takes to fade out a missed note
+final float COLOUR_SWITCH = 80;            // distance to ring where note colour changes
 
 color NOTE_BASE_COLOR   = color(120);         // grey when it first spawns
 color NOTE_OUTLINE_COL  = color(255, 215, 0); // yellow highlight (next-to-hit)
