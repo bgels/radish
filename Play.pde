@@ -7,30 +7,22 @@ import java.util.ArrayList;
 // Play handles gameplay: background, audio, JSON config, and note timings
 class Play {
   // --- The selected song entry from MainMenu
-  SongEntry           entry;
-  SoundFile           song;
-  BeatClock beat;
-  
-
-  // --- Background
-  BackgroundAnimator  bgAnim;
-
-  // --- LANE UI elements
-  LaneUI[] laneUI = new LaneUI[LANES];
-  SpecialUI specialUI = new SpecialUI();
-
-  
-
-  // --- Level config data (colors, shapes, etc.)
-  JSONObject          config;
-
-  // --- Note timing data (from .sm file)
-  File                smFile;
-
+  SongEntry            entry;
+  SoundFile            song;
   ArrayList<NoteEvent> chart;
   ArrayList<Note>      live = new ArrayList<>();
-
+  BeatClock            beat;
+  
+  // --- Note timing data (from .sm file)
+  File                smFile;
   PApplet             parent;
+
+  // --- UI and background
+  BackgroundAnimator  bgAnim;
+  LaneUI[] laneUI = new LaneUI[LANES];
+  SpecialUI specialUI = new SpecialUI();
+  // --- Level config data (colors, shapes, etc.)
+  JSONObject          config;
 
   Play(PApplet parent, SongEntry entry) {
     this.parent = parent;
@@ -50,22 +42,7 @@ class Play {
       float   offsetSec = chartData.offsetSec;
 
       song = new SoundFile(parent, entry.audioFile.getAbsolutePath());
-      if (offsetSec > 0) {
-        int cueSample = int(offsetSec * song.sampleRate());
-        song.cue(cueSample);
-        song.play();
-      } 
-      else if (offsetSec < 0) {
-        int delayMs = int(-offsetSec * 1000);
-        new java.util.Timer().schedule(
-          new java.util.TimerTask() {
-            public void run() { song.play(); }
-          }, delayMs
-        );
-      } 
-      else {
-        song.play();
-      }
+      song.play(); // Always start the song from the beginning
 
       beat  = new BeatClock(bpmVal, offsetSec, song);
       chart = chartData.events;

@@ -9,7 +9,6 @@ class NoteEvent{
     }
 }
 
-
 /* Note.pde  ----------------------------------------------------------------
  * A single in-game note (1/8 slice or special circle).
  *   · does its own timing / drawing
@@ -39,8 +38,9 @@ class Note {
     if (hit || missed) return;
     if (songSec < spawnSec) return;          // not visible yet
   
-    float prog = constrain((songSec - spawnSec) / LEAD_SEC, 0, 1);  // 0 → 1
-    if (prog > 1) { missed = true; return; }        // flew past
+    float rawProg = (songSec - spawnSec) / LEAD_SEC; // Unconstrained progress
+    if (rawProg > 1) { missed = true; return; }      // Flew past hit window
+    float prog = constrain(rawProg, 0, 1);           // 0 → 1 for drawing
   
     if (evt.special) {         // ----------- SPECIAL WAVE -----------
       pushMatrix();
