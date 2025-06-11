@@ -12,6 +12,8 @@ class Play {
   ArrayList<NoteEvent> chart;
   ArrayList<Note>      live = new ArrayList<>();
   BeatClock            beat;
+
+  Note nextToHit;
   
   // --- Note timing data (from .sm file)
   File                smFile;
@@ -77,17 +79,21 @@ class Play {
 
     // --- spawn
     float beatLen = 60.0/beat.getBPM();
-    float musicBeat = (songSec - beat.songOffsetSec) / beatLen;
+    float musicBeat = (songSec + beat.songOffsetSec) / beatLen;
     while (chart.size() > 0 &&
-           chart.get(0).beat - musicBeat <= LEAD_SEC / beatLen) {
-      live.add(new Note(chart.remove(0), beatLen));
+          chart.get(0).beat - musicBeat <= LEAD_SEC / beatLen) {
+      live.add( new Note(chart.remove(0), beatLen, beat.songOffsetSec) ); // pass offset
     }
+
+    updateNextToHit();
 
 
     // --- draw / resolve live notes ------------------------------
     for (int i = live.size () - 1; i >= 0; i--) {
       Note n = live.get(i);
-      n.updateAndDraw(songSec);
+      boolean hi = (n == nextToHit);
+      
+      n.updateAndDraw(songSec, hi);
     
       // ordinary 1/8-slice notes only → lanes 0-7
       if (!n.evt.special && n.evt.lane >= 0) {      //   ← guard!
@@ -104,6 +110,16 @@ class Play {
     for(LaneUI ui : laneUI) ui.draw();
     specialUI.draw();
   }
+
+  void updateNextToHit() {
+    // first live note whose hitSec ≥ songSec
+    float now = song.position();
+    nextToHit = null;
+    for (Note n : live) {
+      if (!n.hit && n.hitSec >= now) { nextToHit = n; break; }
+    }
+  }
+
 
   void stopSong(){
     if(song != null && song.isPlaying()) song.stop();

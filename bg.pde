@@ -114,8 +114,8 @@ class BackgroundAnimator {
       bgPG.background(currentBgColor);
 
       // compute “phase” inside current beat (0…1)
-      float ph  = beat.phase();
-      float ang = TWO_PI * ph;
+      beat.phase();
+      float ang = TWO_PI * beat.getBeat();
 
       // first rotating cube -------------------------------------
       bgPG.pushMatrix();

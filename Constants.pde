@@ -16,6 +16,19 @@ final int   WAVE_STROKE       = 0xFF0096FF;              // blue #0096FF
 final float JUDGE_RADIUS     =  100;   // main judgement ring
 final float SPECIAL_RADIUS   = 300;   // where special notes land
 
+
+// ───────── UI theming ─────────
+float uiScale = 1.0;                          // change at run-time to resize everything
+
+color NOTE_BASE_COLOR   = color(120);         // grey when it first spawns
+color NOTE_OUTLINE_COL  = color(255, 215, 0); // yellow highlight (next-to-hit)
+
+color[] LANE_NOTE_COLOR = {                   // one per lane   (edit freely)
+  #00C8FF, #FF4081, #39FF14, #FEDA00,
+  #9C27B0, #FF9800, #03A9F4, #E91E63
+};
+
+
 //  index : 0      1         2         3        4          5          6          7
 //  lane  : LEFT , BOTTOM ,  TOP ,   RIGHT ,  TOP-LEFT , BOTTOM-LEFT , TOP-RIGHT , BOTTOM-RIGHT
 float laneAngle(int ln){

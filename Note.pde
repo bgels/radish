@@ -26,14 +26,14 @@ class Note {
   boolean missed  = false;
 
   // --------------------------------------------------------------------
-    Note(NoteEvent evt, float beatLen) {
-      this.evt      = evt;
-      this.hitSec   = evt.beat * beatLen;
-      this.spawnSec = hitSec - LEAD_SEC;
-    }
+      Note(NoteEvent evt, float beatLen, float offsetSec) {
+        this.evt      = evt;
+        this.hitSec   = evt.beat * beatLen - offsetSec;   // ← subtract (remember: offset may be –7)
+        this.spawnSec = hitSec - LEAD_SEC;
+      }
   
     // --------------------------------------------------------------------
-  void updateAndDraw(float songSec) {
+  void updateAndDraw(float songSec, boolean highlight) {
   
     if (hit || missed) return;
     if (songSec < spawnSec) return;          // not visible yet
@@ -56,15 +56,35 @@ class Note {
   
     // ----------------------- REGULAR SLICE -------------------------
     float a = laneAngle(evt.lane);
-    float r = lerp(width*0.55, JUDGE_RADIUS, prog);
-  
+
+    // position between “far” and judgement ring, both scaled
+    float rStart = max(width, height) * 0.55 * uiScale;
+    float rEnd   = JUDGE_RADIUS * uiScale;
+    float r = lerp(rStart, rEnd, prog);
+
+    // 1) colour fades grey → lane colour
+    color laneCol = LANE_NOTE_COLOR[evt.lane];
+    color c       = lerpColor(NOTE_BASE_COLOR, laneCol, prog);
+
+    float d = NOTE_DIAMETER * uiScale;
+
     pushMatrix();
       translate(width/2 + cos(a)*r, height/2 + sin(a)*r);
       rotate(a);
+
       noStroke();
-      fill(0, 200, 255, 220);
-      arc(0, 0, NOTE_DIAMETER, NOTE_DIAMETER, -PI/8, PI/8);
+      fill(red(c), green(c), blue(c), 220);
+      arc(0, 0, d, d, -PI/8, PI/8);
+
+      // 2) yellow outline on the note that’s next to hit
+      if (highlight) {                       // ← new param, see Play.pde below
+        stroke(NOTE_OUTLINE_COL);
+        strokeWeight(4*uiScale);
+        noFill();
+        arc(0, 0, d + 6*uiScale, d + 6*uiScale, -PI/8, PI/8);
+      }
     popMatrix();
+
   }
 
 }

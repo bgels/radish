@@ -10,6 +10,9 @@ class BeatClock {
   float    songOffsetSec;          // SM #OFFSET support  (can be ±)
   SoundFile song;
 
+  int   currentBeat;   // whole beats elapsed
+  float currentFrac;   // 0-1 progress through the current beat
+
   int      lastWholeBeat = -1;
   boolean[] once         = new boolean[17];   // 1..16
 
@@ -27,9 +30,9 @@ class BeatClock {
                   : millis() / 1000.0f;
 
     // compensate SM offset
-    float t = songSec - songOffsetSec;
-
-    int wholeBeat = int(t / beatLenSec);
+    float t = (songSec + songOffsetSec) / beatLenSec;
+    int wholeBeat = int(t);
+    float fracBeat  = t - wholeBeat;
 
     if (wholeBeat != lastWholeBeat) {       // new beat crossed
       lastWholeBeat = wholeBeat;
@@ -48,11 +51,14 @@ class BeatClock {
   float getBPM() { return bpm; }
 
   // ----------------------------------------------------------
-  float phase() {                           // 0 … 1 progress inside beat
-    float songSec = (song != null)
-                  ? song.position()
-                  : millis() / 1000.0f;
-    float t = (songSec - songOffsetSec) / beatLenSec;
-    return (t - floor(t));                  // fractional part
+  void phase() {
+    float tSec = song.position() + songOffsetSec; // Option A
+    float tBeats = tSec / beatLenSec;
+
+    currentBeat = int(tBeats);
+    currentFrac = tBeats - currentBeat; // 0-1
   }
+
+  public int   getBeat()      { return currentBeat; }
+  public float getFracBeat()  { return currentFrac;  }
 }
