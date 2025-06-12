@@ -20,14 +20,14 @@ class LaneUI {
       translate(width/2, height/2);
       rotate(a);
 
-      // 1) persistent faint outline so the player always sees the lane
+      // persistent faint outline so the player always sees the lane
       noFill();
       stroke(0, alpha);              // white @ baseline alpha
       strokeWeight(20);
       arc(0, 0, JUDGE_RADIUS*2, JUDGE_RADIUS*2,
           -PI/8, PI/8);
 
-      // 2) overlay flash that fades out each frame
+      //  overlay flash that fades out each frame
       if (abs(pulse) > 0.01) {
         stroke(pulse > 0 ? color(0, 200, 255, 200 * pulse)   // cyan for hit
                          : color(255, 0,   0,   200 * -pulse)); // red for miss
@@ -39,9 +39,7 @@ class LaneUI {
   }
 }
 
-// ---------------------------------------------------------------
-// SpecialUI – circular judgement ring for “special” (space‑bar) notes
-// ---------------------------------------------------------------
+
 class SpecialUI {
   float alpha = 60;          // baseline opacity for the static ring
   float pulse = 0;           // +/-1 → 0 flash value
@@ -51,13 +49,13 @@ class SpecialUI {
   }
 
   void draw(){
-    // 1) persistent faint outline so timing is visible even when idle
+    //persistent faint outline so timing is visible even when idle
     noFill();
     stroke(0, alpha);
     strokeWeight(24);
     ellipse(width/2, height/2, SPECIAL_RADIUS*2, SPECIAL_RADIUS*2);
 
-    // 2) overlay flash
+    // overlay flash
     if (abs(pulse) > 0.01) {
       stroke(pulse > 0 ? color(255, 200, 0, 200 * pulse)   // gold for hit
                        : color(255, 0,   0, 200 * -pulse)); // red for miss

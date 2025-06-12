@@ -1,26 +1,20 @@
-// BackgroundAnimator.pde  ─────────────────────────────────────────
-// Lightweight hex-wave + starfield background.
-// All original API (applyConfig, setSongName, addCubeColor, …) is
-// preserved so Play.pde and other files compile unchanged.
-// ----------------------------------------------------------------
+
 import processing.data.*;
 
 class BackgroundAnimator {
 
-  // ---------- links to the rest of the game ----------
+
   BeatClock beat;
   String    songName;
 
-  // ---------- colour / theming ----------
+
   ArrayList<Integer> bgColors   = new ArrayList<Integer>();
   ArrayList<Integer> cubeColors = new ArrayList<Integer>(); // kept for JSON parsing
   color              currentBgColor;
 
-  // ---------- wave + stars ----------
   ArrayList<Hexagon> hexagons = new ArrayList<Hexagon>();
   ArrayList<Star>    stars    = new ArrayList<Star>();
 
-  // ---------- geometry & tunables ----------
   final float SHRINK_RATE     = 2.0;   // px per frame
   final int   STARS_PER_RING  = 50;
   final int   SPAWN_BEATS     = 1;     // ring every 4 beats
@@ -30,10 +24,8 @@ class BackgroundAnimator {
   final color carrotCol  = color(255,147,41);
   final color darkCarrot = darkenColor(carrotCol,0.70);
 
-  // ---------- cached buffer ----------
   PGraphics bgPG;
 
-  /* ─────────────────────────────────────────────────────────── */
   BackgroundAnimator(BeatClock beat, String songName) {
     this.beat     = beat;
     this.songName = songName;
@@ -54,16 +46,15 @@ class BackgroundAnimator {
     bgPG = createGraphics(width, height, P3D);   // keep P3D to match old buffer
   }
 
-  /* ── public helpers kept for compatibility ────────────────── */
+
   void setSongName(String s) { songName = s; }
 
   void addBgColor(int c)   { bgColors.add(c);   }
   void addCubeColor(int c) { cubeColors.add(c); }  // still parsed, just unused
 
-  /** JSON theme parser – **unchanged signature** */
   void applyConfig(JSONObject cfg) {
 
-    //-- background colours ------------------------------------
+    //background colours
     if (cfg.hasKey("background")) {
       JSONObject bg = cfg.getJSONObject("background");
       if (bg.hasKey("colors")) {
@@ -76,7 +67,7 @@ class BackgroundAnimator {
       }
     }
 
-    //-- cube colours (ignored visually but kept for legacy) ---
+    // (ignored visually but kept for legacy)
     if (cfg.hasKey("shapes")) {
       JSONObject sh = cfg.getJSONObject("shapes");
       if (sh.hasKey("cubeColors")) {
@@ -95,18 +86,18 @@ class BackgroundAnimator {
   /* ─────────────────────────────────────────────────────────── */
   void update() {
 
-    // (1) change background every beat
+    //  change background every beat
     if (beat.everyOnce(1) && !bgColors.isEmpty()) {
       currentBgColor = bgColors.get(int(random(bgColors.size())));
     }
 
-    // (2) spawn a new ring every 4 beats
+    //  spawn a new ring every 4 beats
     if (beat.everyOnce(SPAWN_BEATS)) spawnRing();
 
-    // (3) redraw into buffer
+    //  redraw into buffer
     redrawPG();
 
-    // (4) blit buffer & song title overlay
+    //  blit buffer & song title overlay
     image(bgPG,0,0);
 
     hint(DISABLE_DEPTH_TEST);
@@ -115,8 +106,7 @@ class BackgroundAnimator {
     hint(ENABLE_DEPTH_TEST);
   }
 
-  /* ─────────────────────────────────────────────────────────── */
-  /* internal helpers                                            */
+
   void spawnRing() {
     color col = (hexagons.size()%2==0)? carrotCol : darkCarrot;
     hexagons.add(new Hexagon(maxRadius, col));
@@ -155,7 +145,7 @@ class BackgroundAnimator {
     bgPG.endDraw();
   }
 
-  /* ───────────────────────── inner classes ─────────────────── */
+
   class Hexagon{
     float radius;  color col;
     Hexagon(float r,color c){ radius=r; col=c; }

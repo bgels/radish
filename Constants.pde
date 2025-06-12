@@ -8,7 +8,7 @@ final float HIT_WINDOW_PERF = .08f;
 final float HIT_WINDOW_GOOD = .14f;
 final int   LANES            =   8;
 
-final float NOTE_DIAMETER   = 120;   // Ø of every regular slice (pixels)
+final float NOTE_DIAMETER   = 120;
 
 final float WAVE_START_RADIUS = max(width, height) * .9; // off-screen
 final int   WAVE_STROKE       = 0xFF0096FF;              // blue #0096FF
@@ -23,7 +23,7 @@ float uiScale = 1.0;                          // change at run-time to resize ev
 color NOTE_BASE_COLOR   = color(0);         // grey when it first spawns
 color NOTE_OUTLINE_COL  = color(255, 215, 0); // yellow highlight (next-to-hit)
 
-color[] LANE_NOTE_COLOR = {                   // one per lane   (edit freely)
+color[] LANE_NOTE_COLOR = {                   // one per lane   (edit freely) but yellolw is cool
 #ff7b00, #ff7b00, #ff7b00, #ff7b00,
 #fff79c, #fff79c, #fff79c, #fff79c
 };
@@ -53,36 +53,30 @@ color darkenColor(color c, float factor) {
   );
 }
 
-// ───────── draw a carrot-shaped slice ─────────
-// (call this after translate(...) and rotate(laneAngle))
-// size is a scaling factor relative to the 100-unit base,
-// carrotColor is the fill for the slice, leafColor for the leaves.
+
 void drawCarrotBase(float x, float y, float size, color carrotColor, color leafColor) {
   pushMatrix();
     translate(x, y);
-    // rotate(-PI/2) makes our base‐slice point “up” (along 0°),
-    // so that when you wrap it with rotate(laneAngle),
-    // it points at the correct octant.
     rotate(2 * PI);
     scale(size);
 
-    float R       = 50;         // unit-radius (our 100×100 base)
+    float R       = 50; 
     float arcSpan = PI/4;       // 45°
 
-    // 1) Carrot body (1/8 slice)
+    // Carrot body (1/8 slice)
     noStroke();
     fill(carrotColor);
     arc(0, 0, R*2, R*2, -arcSpan/2, arcSpan/2);
 
-    // 2) Leaves just outside the rim
+    // Leaves just outside the rim
     float leafDist = R * 1.05;
-    float mid      = 0;         // bisector of our slice
+    float mid      = 0;        
     float leafW    = R * 0.4;
     float leafH    = R * 0.6;
 
     pushMatrix();
       translate(cos(mid)*leafDist, sin(mid)*leafDist);
-      rotate(PI/2);            // make them stick “up” from the rim
+      rotate(PI/2);            // make them stick up from the rim
       fill(darkenColor(carrotColor, .7));
       noStroke();
       ellipse(0,         0, leafW,       leafH);
