@@ -1,142 +1,194 @@
-// BackgroundAnimator.pde ----------------------------------------
+// BackgroundAnimator.pde  ─────────────────────────────────────────
+// Lightweight hex-wave + starfield background.
+// All original API (applyConfig, setSongName, addCubeColor, …) is
+// preserved so Play.pde and other files compile unchanged.
+// ----------------------------------------------------------------
 import processing.data.*;
 
-// ----------------------------------------------------------------
-// Renders the heavy rotating 3-D scene once per beat into a
-// PGraphics (bgPG) to lighten the main draw() load.
-// Only lightweight beat-synced overlays are done live.
-// ----------------------------------------------------------------
 class BackgroundAnimator {
 
+  // ---------- links to the rest of the game ----------
   BeatClock beat;
   String    songName;
 
-  // colour lists -------------------------------------------------
+  // ---------- colour / theming ----------
   ArrayList<Integer> bgColors   = new ArrayList<Integer>();
+  ArrayList<Integer> cubeColors = new ArrayList<Integer>(); // kept for JSON parsing
   color              currentBgColor;
-  ArrayList<Integer> cubeColors = new ArrayList<Integer>();
 
-  // cached graphics ---------------------------------------------
-  PGraphics bgPG;            // holds 3-D background
+  // ---------- wave + stars ----------
+  ArrayList<Hexagon> hexagons = new ArrayList<Hexagon>();
+  ArrayList<Star>    stars    = new ArrayList<Star>();
 
+  // ---------- geometry & tunables ----------
+  final float SHRINK_RATE     = 2.0;   // px per frame
+  final int   STARS_PER_RING  = 50;
+  final int   SPAWN_BEATS     = 1;     // ring every 4 beats
+
+  float centreX, centreY, maxRadius;
+
+  final color carrotCol  = color(255,147,41);
+  final color darkCarrot = darkenColor(carrotCol,0.70);
+
+  // ---------- cached buffer ----------
+  PGraphics bgPG;
+
+  /* ─────────────────────────────────────────────────────────── */
   BackgroundAnimator(BeatClock beat, String songName) {
     this.beat     = beat;
     this.songName = songName;
 
-    // default colours (will be overwritten by JSON if provided)
-    addCubeColor(color(79,  69,  87));
-    addCubeColor(color(109, 93, 110));
-    addBgColor  (color(57,  54,  70));
-    addBgColor  (color(244, 238, 224));
+    // two safe default colours (can be overwritten by JSON)
+    addBgColor(color(57, 54, 70));     // slate
+    addBgColor(color(244,238,224));    // parchment
     currentBgColor = bgColors.get(0);
 
-    bgPG = createGraphics(width, height, P3D);
-    redrawPG();             // draw first frame immediately
+    // geometry helpers
+    centreX   = width  * 0.5;
+    centreY   = height * 0.5;
+    maxRadius = dist(0,0,centreX,centreY) * 1.5;
+
+    // first wave already present
+    hexagons.add(new Hexagon(maxRadius, carrotCol));
+
+    bgPG = createGraphics(width, height, P3D);   // keep P3D to match old buffer
   }
 
-  // config -------------------------------------------------------
-  void setSongName(String s) {
-    songName = s;
-  }
+  /* ── public helpers kept for compatibility ────────────────── */
+  void setSongName(String s) { songName = s; }
 
+  void addBgColor(int c)   { bgColors.add(c);   }
+  void addCubeColor(int c) { cubeColors.add(c); }  // still parsed, just unused
+
+  /** JSON theme parser – **unchanged signature** */
   void applyConfig(JSONObject cfg) {
-    // -- parse "background" → "colors" array of [r,g,b]
+
+    //-- background colours ------------------------------------
     if (cfg.hasKey("background")) {
       JSONObject bg = cfg.getJSONObject("background");
       if (bg.hasKey("colors")) {
         bgColors.clear();
         JSONArray arr = bg.getJSONArray("colors");
-        for (int i = 0; i < arr.size(); i++) {
+        for (int i=0;i<arr.size();i++) {
           JSONArray c = arr.getJSONArray(i);
-          int r = c.getInt(0);
-          int g = c.getInt(1);
-          int b = c.getInt(2);
-          addBgColor(color(r, g, b));
+          addBgColor(color(c.getInt(0), c.getInt(1), c.getInt(2)));
         }
       }
     }
 
-    // -- parse "shapes" → "cubeColors" array of [r,g,b]
+    //-- cube colours (ignored visually but kept for legacy) ---
     if (cfg.hasKey("shapes")) {
       JSONObject sh = cfg.getJSONObject("shapes");
       if (sh.hasKey("cubeColors")) {
         cubeColors.clear();
         JSONArray arr = sh.getJSONArray("cubeColors");
-        for (int i = 0; i < arr.size(); i++) {
+        for (int i=0;i<arr.size();i++) {
           JSONArray c = arr.getJSONArray(i);
-          int r = c.getInt(0);
-          int g = c.getInt(1);
-          int b = c.getInt(2);
-          addCubeColor(color(r, g, b));
+          addCubeColor(color(c.getInt(0), c.getInt(1), c.getInt(2)));
         }
       }
     }
 
-    // set initial background colour to the first entry, if any
-    if (!bgColors.isEmpty()) {
-      currentBgColor = bgColors.get(0);
-    }
-
+    if (!bgColors.isEmpty()) currentBgColor = bgColors.get(0);
   }
 
-  void addBgColor(int c) {
-    bgColors.add(c);
-  }
-
-  void addCubeColor(int c) {
-    cubeColors.add(c);
-  }
-
-  // --------------------------------------------------------------
+  /* ─────────────────────────────────────────────────────────── */
   void update() {
-    // 1) change background colour once per whole beat
-    if (beat.everyOnce(1)) {
-      int idx = int(random(bgColors.size()));
-      currentBgColor = bgColors.get(idx);
+
+    // (1) change background every beat
+    if (beat.everyOnce(1) && !bgColors.isEmpty()) {
+      currentBgColor = bgColors.get(int(random(bgColors.size())));
     }
 
-    redrawPG();
-    // 3) blit the cached 3-D scene
-    image(bgPG, 0, 0);
+    // (2) spawn a new ring every 4 beats
+    if (beat.everyOnce(SPAWN_BEATS)) spawnRing();
 
-    // 4) lightweight overlays (song title)
+    // (3) redraw into buffer
+    redrawPG();
+
+    // (4) blit buffer & song title overlay
+    image(bgPG,0,0);
+
     hint(DISABLE_DEPTH_TEST);
-    fill(255);
-    textSize(48);
-    textAlign(LEFT, TOP);
-    text(songName, 20, 20);
+    fill(255); textSize(48); textAlign(LEFT,TOP);
+    text(songName,20,20);
     hint(ENABLE_DEPTH_TEST);
   }
 
-  // --------------------------------------------------------------
-  void redrawPG() {
+  /* ─────────────────────────────────────────────────────────── */
+  /* internal helpers                                            */
+  void spawnRing() {
+    color col = (hexagons.size()%2==0)? carrotCol : darkCarrot;
+    hexagons.add(new Hexagon(maxRadius, col));
+
+    float visibleMax = max(width,height)*0.6;
+    for (int i=0;i<STARS_PER_RING;i++){
+      float ang = random(TWO_PI);
+      float r   = random(visibleMax);
+      float sx  = centreX + cos(ang)*r;
+      float sy  = centreY + sin(ang)*r;
+      stars.add(new Star(new PVector(sx,sy),
+                         PVector.random2D().mult(0.5),
+                         random(1,3),
+                         color(0)));        // black debug dots
+    }
+  }
+
+  void redrawPG(){
     bgPG.beginDraw();
       bgPG.background(currentBgColor);
 
-      // compute “phase” inside current beat (0…1)
-      beat.phase();
-      float ang = TWO_PI * beat.getBeat();
+      // ----- stars -----
+      for (int i=stars.size()-1;i>=0;i--){
+        Star s = stars.get(i);
+        s.update();  s.display(bgPG);
+        if (s.isGone()) stars.remove(i);
+      }
 
-      // first rotating cube -------------------------------------
-      bgPG.pushMatrix();
-        bgPG.translate(width/2, height/2, 0);
-        bgPG.rotateX(ang + 0.1);
-        bgPG.rotateY(ang * 0.5 + 0.05);
-        bgPG.fill(cubeColors.get(0));
-        bgPG.noStroke();
-        bgPG.box(200);
-      bgPG.popMatrix();
-
-      // wireframe cube ------------------------------------------
-      bgPG.pushMatrix();
-        bgPG.translate(width/2, height/2, 0);
-        bgPG.rotateY(ang * 2 + 0.1);
-        bgPG.noFill();
-        bgPG.stroke(cubeColors.get(1));
-        bgPG.strokeWeight(3);
-        bgPG.box(300);
-      bgPG.popMatrix();
+      // ----- hex rings -----
+      for (int i=hexagons.size()-1;i>=0;i--){
+        Hexagon h = hexagons.get(i);
+        h.update();  h.display(bgPG);
+        if (h.isGone()) hexagons.remove(i);
+      }
 
     bgPG.endDraw();
+  }
+
+  /* ───────────────────────── inner classes ─────────────────── */
+  class Hexagon{
+    float radius;  color col;
+    Hexagon(float r,color c){ radius=r; col=c; }
+    void update(){ radius -= SHRINK_RATE; }
+    boolean isGone(){ return radius<=500; }
+    void display(PGraphics g){
+      g.stroke(col); g.noFill();
+      g.beginShape();
+      for (int i=0;i<6;i++){
+        float a = radians(60*i);
+        g.vertex(centreX+cos(a)*radius,
+                 centreY+sin(a)*radius);
+      }
+      g.endShape(CLOSE);
+    }
+  }
+
+  class Star{
+    PVector pos,vel; float sz; color col;
+    Star(PVector p,PVector v,float s,color c){
+      pos=p.copy(); vel=v.copy(); sz=s; col=c;
+    }
+    void update(){
+      pos.add(vel);
+      vel.add(PVector.random2D().mult(0.02));
+    }
+    boolean isGone(){
+      return pos.x<-10||pos.x>width+10||
+             pos.y<-10||pos.y>height+10;
+    }
+    void display(PGraphics g){
+      g.stroke(col); g.strokeWeight(sz);
+      g.point(pos.x,pos.y);
+    }
   }
 }

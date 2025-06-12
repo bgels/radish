@@ -1,11 +1,5 @@
 class BeatClock {
-// ------------------------------------------------------------
-// Simple beat-tracker that works with a fixed BPM.
-//
-//  • tick()     – call every frame to update internal state
-//  • everyOnce(n)  – true once on the first frame of each n-beat bar
-//  • phase()    – 0-1 progress inside the current beat
-// ------------------------------------------------------------
+
   float    bpm, beatLenSec;
   float    songOffsetSec;          // SM #OFFSET support  (can be ±)
   SoundFile song;
@@ -14,7 +8,7 @@ class BeatClock {
   float currentFrac;   // 0-1 progress through the current beat
 
   int      lastWholeBeat = -1;
-  boolean[] once         = new boolean[17];   // 1..16
+  boolean[] once         = new boolean[17];
 
   BeatClock(float bpm, float songOffsetSec, SoundFile song) {
     this.bpm          = bpm;

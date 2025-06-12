@@ -1,11 +1,6 @@
-// ---------------------------------------------------------------
-// LaneUI – always‑visible judgement arcs with hit/miss pulse
-// SpecialUI – always‑visible full ring for space‑bar (special) notes
-// ---------------------------------------------------------------
-
 class LaneUI {
   int lane;                 // which of the 8 octants this UI belongs to
-  float alpha = 80;         // baseline opacity of the static outline
+  float alpha = 255;         //  opacity of the outline
   float pulse = 0;          // fades from ±1 → 0 to show hit (blue) or miss (red)
 
   LaneUI(int lane){
@@ -27,8 +22,8 @@ class LaneUI {
 
       // 1) persistent faint outline so the player always sees the lane
       noFill();
-      stroke(255, alpha);              // white @ baseline alpha
-      strokeWeight(10);
+      stroke(0, alpha);              // white @ baseline alpha
+      strokeWeight(20);
       arc(0, 0, JUDGE_RADIUS*2, JUDGE_RADIUS*2,
           -PI/8, PI/8);
 
@@ -58,8 +53,8 @@ class SpecialUI {
   void draw(){
     // 1) persistent faint outline so timing is visible even when idle
     noFill();
-    stroke(255, alpha);
-    strokeWeight(12);
+    stroke(0, alpha);
+    strokeWeight(24);
     ellipse(width/2, height/2, SPECIAL_RADIUS*2, SPECIAL_RADIUS*2);
 
     // 2) overlay flash

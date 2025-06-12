@@ -1,9 +1,7 @@
-  // ───────────────────────────────────────────────────────────────
-// SMReader.pde – single-BPM StepMania chart reader
-// ───────────────────────────────────────────────────────────────
+
 class SMChart {
   float offsetSec = 0;
-  float bpm       = 120;                 // fallback
+  float bpm       = 120;                 // fallback stuf
   ArrayList<NoteEvent> events = new ArrayList<NoteEvent>();
 }
 
@@ -12,7 +10,6 @@ SMChart readSM(File sm) {
   SMChart chart = new SMChart();
   String[] lines = loadStrings(sm);
 
-/* ── 1. HEADER ──────────────────────────────────────────────── */
   for (String raw : lines) {
     String s = trim(raw);
 
@@ -33,9 +30,9 @@ SMChart readSM(File sm) {
     if (s.startsWith("#NOTES:")) break;   // done with header
   }
 
-/* ── 2. BODY  (one measure = rows until next comma) ─────────── */
+// (one measure = rows until next comma)
   boolean            inChart      = false;
-  int                measureStart = 0;          // beat index (0,4,8,…)
+  int                measureStart = 0;          // beat index
   ArrayList<String>  measureRows  = new ArrayList<String>();
 
   for (String raw : lines) {
@@ -51,10 +48,9 @@ SMChart readSM(File sm) {
       continue;
     }
 
-    /* ----- we have hit a comma → process one full measure ----- */
-    int rows = measureRows.size();               // e.g. 4,8,12,16 …
+    int rows = measureRows.size();
 
-    if (rows == 0) {                             // totally empty measure
+    if (rows == 0) {              // totally empty measure
       measureStart += 4;                         // skip 4 beats
       continue;
     }
