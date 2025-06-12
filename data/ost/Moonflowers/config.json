@@ -1,0 +1,13 @@
+{
+  "songName": "Moonflowers",
+  "bpm": 137,
+  "offset":    -7,
+  "background": {
+    "colors": [
+      [57, 54, 70]
+    ]
+  },
+  "shapes": {
+    "cubeColors": [ [79, 69, 87], [109, 93, 110] ]
+  }
+}

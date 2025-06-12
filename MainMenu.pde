@@ -20,15 +20,15 @@ class MainMenu{
     SongEntry         selected = null;
 
     public MainMenu(String path){
-        File dir = new File(dataPath(path));
-        if(dir.exists() && dir.isDirectory()){
-            for(File folder : dir.listFiles()){
-                if(!folder.isDirectory()){
+        File dir = new File(dataPath(path)); // Gets path to ost folder
+        if(dir.exists() && dir.isDirectory()){ // Check if the directory exists
+            for(File folder : dir.listFiles()){ // For each subfolder in ost
+                if(!folder.isDirectory()){ // if subfolder is not a directory, skip it
                     continue;
                 }
                 println(" Found folder:", folder.getName());
 
-                for (File f : folder.listFiles()) {
+                for (File f : folder.listFiles()) { // Print subfiles in the subfolder
                     println("   Contains:", f.getName());
                 }
                 // setup the song entry by looking for .ogg, .json, and .sm files and setting them
@@ -37,7 +37,7 @@ class MainMenu{
                 File smFile = null;
                 for(File subFile : folder.listFiles()){
                     String name = subFile.getName().toLowerCase();
-                    if (name.endsWith(".wav"))  wavFile  = subFile;
+                    if (name.endsWith(".wav") || name.endsWith(".mp3"))  wavFile  = subFile;
                     else if (name.endsWith(".json")) jsonFile = subFile;
                     else if (name.endsWith(".sm"))   smFile   = subFile;
                 }
@@ -54,7 +54,7 @@ class MainMenu{
     }
 
     void update() {
-        background(30);
+        background(30); // Clear background to dark gray
         textAlign(CENTER, CENTER);
         textSize(24);
         fill(255);
@@ -64,7 +64,8 @@ class MainMenu{
         for (int i = 0; i < entries.size(); i++) {
         int x = width/2 - buttonWidth/2;
         int y = margin*2 + 60 + i*(buttonHeight + margin);
-        String name = entries.get(i).folderName;
+        String name = entries.get(i).folderName; // name of song is the subfolder name
+        // Truncate name if too long
         if (name.length() > 20) {
             name = name.substring(0, 20) + "...";
         }
@@ -76,11 +77,13 @@ class MainMenu{
         else{
             fill(70);
         }
+
+        // Draw the actual button
         rect(x, y, buttonWidth, buttonHeight, 8);
 
         fill(255);
         textSize(20);
-        text(name, x + buttonWidth/2, y + buttonHeight/2);
+        text(name, x + buttonWidth/2, y + buttonHeight/2); // Center name of song in button
         }
     }
 
@@ -89,7 +92,7 @@ class MainMenu{
         for (int i = 0; i < entries.size(); i++) {
         int x = width/2 - buttonWidth/2;
         int y = margin*2 + 60 + i*(buttonHeight + margin);
-        if (over(x, y, buttonWidth, buttonHeight)) {
+        if (over(x, y, buttonWidth, buttonHeight)) { // If mouse is over corresponding button
             selected = entries.get(i);
             break;
         }
