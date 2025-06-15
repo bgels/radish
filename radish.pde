@@ -23,8 +23,8 @@ void setup() {
 
   mainMenu = new MainMenu("ost");
   MenuSong = new SoundFile(this, "menu.wav");
-  MenuSong.amp(musicVol);
   MenuSong.play();
+  MenuSong.amp(musicVol);
 
   endMusic = new SoundFile(this, "hit/end.wav");
 
@@ -50,8 +50,8 @@ void draw() {
           // stop song + any SFX managed by Play
           play.stopSong();
           // play end-screen music
-          endMusic.amp(musicVol);
           endMusic.play();
+          endMusic.amp(musicVol);
 
           endScreen = new EndScreen(play);
           currentState = gameState.END;
@@ -70,8 +70,8 @@ void mousePressed() {
     if (endScreen.onButton()) {
       endMusic.stop();   //stop the end‐screen track here
       currentState = gameState.MENU;
-      MenuSong.amp(musicVol);
       MenuSong.play();
+      MenuSong.amp(musicVol);
     }
     return;
   }

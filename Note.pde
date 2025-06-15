@@ -34,7 +34,7 @@ class Note {
     if (songSec < spawnSec) return;
 
     float rawProg = (songSec - spawnSec) / LEAD_SEC;
-    if (rawProg > 1) { missed = true; return; }
+    if (rawProg > 1) { return; }   // let Play() decide when it's a miss
     float prog = constrain(rawProg, 0, 1);
 
     if (evt.special) {
@@ -43,43 +43,40 @@ class Note {
         translate(width/2, height/2, 0);
         noFill();
         stroke(WAVE_STROKE);
-        strokeWeight(5 * uiScale);
+        strokeWeight(10 * uiScale);
         float rNow = lerp(WAVE_START_RADIUS, SPECIAL_RADIUS, prog) * uiScale;
         ellipse(0, 0, rNow*2, rNow*2);
       popMatrix();
       return;
     }
 
-    // ----- regular carrot slice -----
+    // ----- regular arc note -----
     float a      = laneAngle(evt.lane);
     float rStart = max(width, height) * 0.55 * uiScale;
-    float rEnd   = (JUDGE_RADIUS - NOTE_DIAMETER/2 - 70) * uiScale;
+    float rEnd   = (JUDGE_RADIUS - NOTE_DIAMETER/2) * uiScale;
     float r      = lerp(rStart, rEnd, prog);
 
-    // interpolated carrot color
+    // colour blend
     color laneCol = LANE_NOTE_COLOR[evt.lane];
     color c       = lerpColor(NOTE_BASE_COLOR, laneCol, prog);
 
-    // draw carrot at (x,y) on its radial path
-    float d = NOTE_DIAMETER;  // unscaled diameter
     pushMatrix();
       translate(width/2 + cos(a)*r, height/2 + sin(a)*r);
       rotate(a);
 
-      // size parameter = (diameter / unit-diameter) * uiScale
-      float size = (d / 100.0) * uiScale;
-      // leaf color (static green — tweak as you like)
-      color leafCol = color(50,205,50);
-      drawCarrotBase(0, 0, size, c, leafCol);
+      stroke(c);
+      strokeWeight(20 * uiScale);
+      noFill();
+      float d = NOTE_DIAMETER * uiScale;
+      arc(0, 0, d, d, -PI/8, PI/8);   // same shape as shield
 
-      // highlight outline (next-to-hit)
+      // highlight (next-to-hit)
       if (highlight) {
-        stroke(NOTE_OUTLINE_COL);
-        strokeWeight(10 * uiScale);
-        noFill();
-        // draw a faint arc as outline behind carrot
-        point(0,0);
+        stroke(color(NOTE_OUTLINE_COL));
+        strokeWeight(5 * uiScale);
+        arc(0, 0, d, d, -PI/8, PI/8);
       }
     popMatrix();
+
   }
 }

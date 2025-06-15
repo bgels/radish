@@ -1,3 +1,8 @@
+// ───────── Debug switch ─────────
+final boolean debug = true;        // set false to hide all debug visuals
+
+
+
 final float OUTER_DIAMETER    = 200;
 final float INNER_DIAMETER    = 140;
 final float ARC_SPAN_DEG      =  40;
@@ -8,7 +13,12 @@ final float HIT_WINDOW_PERF = .08f;
 final float HIT_WINDOW_GOOD = .14f;
 final int   LANES            =   8;
 
-final float NOTE_DIAMETER   = 120;
+
+final float SPECIAL_EARLY_WINDOW = HIT_WINDOW * 0.50;   // tighter early
+final float SPECIAL_LATE_WINDOW  = HIT_WINDOW * 1.50;   // looser late
+
+
+final float NOTE_DIAMETER   = 250;
 
 final float WAVE_START_RADIUS = max(width, height) * .9; // off-screen
 final int   WAVE_STROKE       = 0xFF0096FF;              // blue #0096FF
@@ -21,12 +31,18 @@ final float SPECIAL_RADIUS   = 300;   // where special notes land
 float uiScale = 1.0;                          // change at run-time to resize everything
 
 color NOTE_BASE_COLOR   = color(0);         // grey when it first spawns
-color NOTE_OUTLINE_COL  = color(255, 215, 0); // yellow highlight (next-to-hit)
+color NOTE_OUTLINE_COL  =#000000; // yellow highlight (next-to-hit)
 
 color[] LANE_NOTE_COLOR = {                   // one per lane   (edit freely) but yellolw is cool
 #ff7b00, #ff7b00, #ff7b00, #ff7b00,
 #fff79c, #fff79c, #fff79c, #fff79c
 };
+
+color SPECIALHIT = color(255, 200, 0);
+color SPECIALMISS = color(255, 0, 0); 
+
+color NORMALHIT = color(152, 166, 154); 
+color NORMALMISS = color(255, 0, 0); 
 
 
 // ───────── helper for octant angles ─────────
