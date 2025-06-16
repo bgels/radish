@@ -12,8 +12,8 @@ enum gameState { MENU, SELECT, PLAYING, END }
 gameState currentState = gameState.SELECT;  // start in song‐map
 EndScreen  endScreen;
 
-float musicVol = 0.80;   // 0–1
-float sfxVol   = 0.80;   // 0–1
+float musicVol = 1;   // 0–1
+float sfxVol   = 1;   // 0–1
 
 // 
 void setup() {

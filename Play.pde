@@ -54,7 +54,7 @@ class Play {
     SMChart data = readSM(entry.smFile);
     song = new SoundFile(parent, entry.audioFile.getAbsolutePath());
     song.play();
-    song.amp(musicVol);
+    song.amp(1);
     
     
 
