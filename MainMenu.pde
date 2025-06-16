@@ -54,7 +54,7 @@ class MainMenu{
     }
 
     void update() {
-        background(30); // Clear background to dark gray
+        background(60); // Clear background to dark gray
         textAlign(CENTER, CENTER);
         textSize(24);
         fill(255);

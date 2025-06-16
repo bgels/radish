@@ -51,7 +51,7 @@ class SpecialUI {
   void draw(){
     //persistent faint outline so timing is visible even when idle
     noFill();
-    stroke(50, alpha);
+    stroke(20, alpha);
     strokeWeight(24);
     ellipse(width/2, height/2, SPECIAL_RADIUS*2, SPECIAL_RADIUS*2);
 
